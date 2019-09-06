@@ -5,6 +5,21 @@ import './Header.css';
 class Header extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            selectedAlgorithm:""
+        }
+    }
+
+    algorithmSelect = (selectedAlgorithm)=>{
+        this.setState({
+            selectedAlgorithm
+        })
+    }
+
+    calculate = () =>{
+        if(this.state.selectedAlgorithm!=""){
+            this.props.calculate(this.state.selectedAlgorithm);
+        }
     }
 
     render() {
@@ -14,7 +29,7 @@ class Header extends Component {
                     <li className="dropdown">
                         <button className="dropbtn">Algorithms{" "}<FaAngleDown/></button>
                         <div className="dropdown-content">
-                            <button>Link 1</button>
+                            <button onClick={()=>this.algorithmSelect("dijikstra")}>Dijikstra's Algorithm</button>
                             <button>Link 2</button>
                             <button>Link 3</button>
                         </div>
@@ -29,7 +44,7 @@ class Header extends Component {
                         </div>
                     </li>
 
-                    <li><button>Calculate</button></li>
+                    <li><button onClick={this.calculate}>Calculate</button></li>
                     <li className="rightFloat"><button>Clear Map</button></li>
                     <li className="rightFloat"><button>Clear Path</button></li>
                     <li className="rightFloat"><button>Clear Walls</button></li>

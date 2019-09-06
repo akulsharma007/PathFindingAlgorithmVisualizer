@@ -1,13 +1,11 @@
 import React from 'react';
-import Header from './Header';
-import Body from './Body';
 import './App.css';
+import Body from './Body';
 
 function App() {
   return (
     <>
-      <div className="headerClass"><Header/></div>
-      <div className="bodyClass"><Body/></div>
+      <div className="bodyClass"><Body algorithm/></div>
     </>
   );
 }

@@ -6,19 +6,27 @@ class Header extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedAlgorithm:""
+            selectedAlgorithm:"",
+            selectedSpeed:Number
         }
     }
 
     algorithmSelect = (selectedAlgorithm)=>{
+        this.props.algorithmSelect(selectedAlgorithm);
         this.setState({
             selectedAlgorithm
         })
     }
 
+    speedSelect = (selectedSpeed)=>{
+        this.setState({
+            selectedSpeed
+        })
+    }
+
     calculate = () =>{
         if(this.state.selectedAlgorithm!=""){
-            this.props.calculate(this.state.selectedAlgorithm);
+            this.props.calculate(this.state.selectedAlgorithm,this.state.selectedSpeed);
         }
     }
 
@@ -29,25 +37,28 @@ class Header extends Component {
                     <li className="dropdown">
                         <button className="dropbtn">Algorithms{" "}<FaAngleDown/></button>
                         <div className="dropdown-content">
-                            <button onClick={()=>this.algorithmSelect("dijikstra")}>Dijikstra's Algorithm</button>
-                            <button>Link 2</button>
-                            <button>Link 3</button>
+                            <button onClick={()=>this.algorithmSelect("dijkstra")}>Dijkstra's Algorithm</button>
                         </div>
                     </li>
                     
                     <li className="dropdown">
                         <button className="dropbtn">Mazes{" "}<FaAngleDown/></button>
                         <div className="dropdown-content">
-                            <button>Link 1</button>
-                            <button>Link 2</button>
-                            <button>Link 3</button>
+                        <button>soon</button>
                         </div>
                     </li>
 
                     <li><button onClick={this.calculate}>Calculate</button></li>
-                    <li className="rightFloat"><button>Clear Map</button></li>
-                    <li className="rightFloat"><button>Clear Path</button></li>
-                    <li className="rightFloat"><button>Clear Walls</button></li>
+                    <li className="rightFloat"><button onClick={()=>this.props.clearGrid()}>Clear Grid</button></li>
+                    <li className="dropdown rightFloat">
+                        <button className="dropbtn">Speed{" "}<FaAngleDown/></button>
+                        <div className="dropdown-content">
+                            <button onClick={()=>this.speedSelect(0)}>Original</button>
+                            <button onClick={()=>this.speedSelect(4)}>Fast</button>
+                            <button onClick={()=>this.speedSelect(1)}>Medium</button>
+                            <button onClick={()=>this.speedSelect(2)}>Slow</button>
+                        </div>
+                    </li>
                 </ul>
             </>
         )

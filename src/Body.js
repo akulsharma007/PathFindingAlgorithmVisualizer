@@ -10,7 +10,7 @@ class Body extends Component {
         for (let i = 0; i < 20; i++) {
             arr[i] = [];
             for (let j = 0; j < 61; j++) {
-                arr[i][j] = { dijikstra: { parenti: 0, parentj: 0, included: false } };
+                arr[i][j] = { dijkstra: { parenti: -1, parentj: -1, included: false, shortestPath: false } };
             }
         }
         this.state = {
@@ -19,23 +19,23 @@ class Body extends Component {
             startNodej: 10,
             endNodei: 10,
             endNodej: 50,
-            restrictedSpacei: [],
-            restrictedSpacej: [],
             wallRestrictedSpace: [],
             clickedFlag: false,
-            mouseDownUpFlag: false
+            mouseDownUpFlag: false,
+            disableGridFlag: false,
+            selectedAlgorithm: ""
         }
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         let arr = this.state.arr;
         arr.forEach((ele, i) => {
             ele.forEach((element, j) => {
-                element.style = { backgroundColor: "white", borderStyle: "solid" }
+                element.style = { backgroundColor: "white" }
             })
         })
 
-        this.setState({
+        await this.setState({
             arr: arr
         })
     }
@@ -46,16 +46,16 @@ class Body extends Component {
         }
     }
 
-    drop = (event, i, j) => {
+    drop = async (event, i, j) => {
         event.preventDefault();
         const nodeType = event.dataTransfer.getData("nodeType");
         if (nodeType == "start") {
-            this.setState({
+            await this.setState({
                 startNodei: i,
                 startNodej: j
             })
         } else if (nodeType == "end") {
-            this.setState({
+            await this.setState({
                 endNodei: i,
                 endNodej: j
             })
@@ -76,52 +76,56 @@ class Body extends Component {
         }
     }
 
-    doubleClickHandler = (event, i, j) => {
-        this.setState({
+    doubleClickHandler = async (event, i, j) => {
+        await this.setState({
             clickedFlag: false
         })
         let arr = this.state.arr;
         if (!this.allOccupiedPlacesCheck(i, j)) {
             if (arr[i][j].style.backgroundColor != "black") {
-                arr[i][j].style = { backgroundColor: "black", borderStyle: "none" };
+                arr[i][j].style = { backgroundColor: "black" };
                 let wallArr = this.state.wallRestrictedSpace;
                 wallArr.push({ i, j });
-                this.setState({
+                await this.setState({
                     wallRestrictedSpace: wallArr,
                     arr: arr
                 })
+
             } else {
-                arr[i][j].style = { backgroundColor: "white", borderStyle: "solid" };
-                this.setState({
-                    wallRestrictedSpace: this.state.wallRestrictedSpace.filter(ele => ele.i != i && ele.j != j),
+                arr[i][j].style = { backgroundColor: "white" };
+                let arrr = this.state.wallRestrictedSpace.filter(ele => ele.i != i || ele.j != j)
+                await this.setState({
+                    wallRestrictedSpace: arrr,
                     arr: arr
                 })
+                console.log(arrr);
             }
         }
     }
 
-    clickHandler = (event, i, j) => {
-        this.setState({
+    clickHandler = async (event, i, j) => {
+        await this.setState({
             clickedFlag: !this.state.clickedFlag
         })
     }
 
-    mouseMoveHandler = (event, i, j) => {
+    mouseMoveHandler = async (event, i, j) => {
         if (this.state.clickedFlag) {
             let arr = this.state.arr;
             if (!this.allOccupiedPlacesCheck(i, j)) {
                 if (arr[i][j].style.backgroundColor != "black") {
-                    arr[i][j].style = { backgroundColor: "black", borderStyle: "none" }
+                    arr[i][j].style = { backgroundColor: "black" }
                     let wallArr = this.state.wallRestrictedSpace;
                     wallArr.push({ i, j });
-                    this.setState({
+                    await this.setState({
                         wallRestrictedSpace: wallArr,
                         arr: arr
                     })
                 } else {
-                    arr[i][j].style = { backgroundColor: "white", borderStyle: "solid" }
-                    this.setState({
-                        wallRestrictedSpace: this.state.wallRestrictedSpace.filter(ele => ele.i != i && ele.j != j),
+                    arr[i][j].style = { backgroundColor: "white" }
+                    let arrr = this.state.wallRestrictedSpace.filter(ele => ele.i != i || ele.j != j);
+                    await this.setState({
+                        wallRestrictedSpace: arrr,
                         arr: arr
                     })
                 }
@@ -129,61 +133,327 @@ class Body extends Component {
         }
     }
 
-    // mouseDownHandler=(event)=>{
-    //     console.log('yeah');
-    //     this.setState({
-    //         mouseDownUpFlag:true
-    //     })
-    // }
-
-    // mouseUpHandler=(event)=>{
-    //     console.log('neah');
-    //     this.setState({
-    //         mouseDownUpFlag:false,
-    //         clickedFlag:false
-    //     })
-    // }
-
     /***************Algorithms Implementation */
-    calculate = (algorithm) => {
-        if (algorithm == "dijikstra") {
-            this.dijikstraCalculate();
+    clearGrid = async () => {
+        let arr1 = this.state.arr;
+        for (let i = 0; i < 20; i++) {
+            for (let j = 0; j < 61; j++) {
+                arr1[i][j].dijkstra = { parenti: -1, parentj: -1, included: false, shortestPath: false };
+                arr1[i][j].style = { backgroundColor: "white" }
+            }
+        }
+        await this.setState({
+            arr: arr1,
+            startNodei: 10,
+            startNodej: 10,
+            endNodei: 10,
+            endNodej: 50,
+            wallRestrictedSpace: [],
+            clickedFlag: false,
+            mouseDownUpFlag: false,
+            selectedAlgorithm: ""
+        })
+    }
+
+    algorithmSelect = (algorithm)=>{
+        if (algorithm == "dijkstra") {
+            this.setState({
+                selectedAlgorithm: "dijkstra"
+            })
+        }
+    }
+    
+    calculate = (algorithm, speed) => {
+        if (algorithm == "dijkstra") {
+            this.dijkstraCalculate(speed);
         }
     }
 
-    dijikstraCalculate = () => {
-        const { arr , startNodei , startNodej } = this.state;
+    dijkstraCalculate = async (speed) => {
+
+        const { arr, startNodei, startNodej } = this.state;
         let sptSet = [];
         arr.forEach((ele, i) => {
             ele.forEach((element, j) => {
-                if(i==startNodei&&j==startNodej){
-                    sptSet.push({i,j,distance:0})
-                }else{
-                    sptSet.push({i,j,distance:Number.MAX_SAFE_INTEGER})
+                if (i == startNodei && j == startNodej) {
+                    sptSet.push({ i, j, distance: 0 })
+                } else {
+                    sptSet.push({ i, j, distance: Number.MAX_SAFE_INTEGER })
                 }
             })
         })
-        console.log(sptSet);
 
-        for(let i=0;i<sptSet.length;i++){
-            let u = this.dijikstraMinDistanceNode(sptSet);
+        let v = 0;
 
-            let arr1=arr;
-            arr1[sptSet[u].i][sptSet[u].j].dijikstra.included = true;
-            this.setState({
-                arr:arr1
-            })
-            console.log(arr1);
-            
+        let timerSpeed = Number;
+        if (speed == 1) {
+            timerSpeed = 200;
+        } else if (speed == 2) {
+            timerSpeed = 500;
+        } else if (speed == 4) {
+            timerSpeed = 1;
+        }
+        if (speed != 0) {
+            let timer = await setInterval(async () => {
+                this.setState({
+                    disableGridFlag: true
+                })
+                let u = this.dijkstraMinDistanceNode(sptSet);
+                if (u == -1) {
+                    clearInterval(timer);
+                    this.setState({
+                        disableGridFlag: false
+                    })
+                    return;
+                }
+                let arr1 = arr;
+                arr1[sptSet[u].i][sptSet[u].j].dijkstra.included = true;
+
+                await this.setState({
+                    arr: arr1
+                })
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i - 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i - 1 >= 0 && sptSet[u].i - 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i - 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].distance + 1 < sptSet[u - 61].distance) {
+                        sptSet[u - 61].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // i+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i + 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i + 1 >= 0 && sptSet[u].i + 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i + 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].distance + 1 < sptSet[u + 61].distance) {
+                        sptSet[u + 61].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // j-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j - 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j - 1 >= 0 && sptSet[u].j - 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j - 1].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].distance + 1 < sptSet[u - 1].distance) {
+                        sptSet[u - 1].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // j+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j + 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j + 1 >= 0 && sptSet[u].j + 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j + 1].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].distance + 1 < sptSet[u + 1].distance) {
+                        sptSet[u + 1].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                if ((sptSet[u].i == this.state.endNodei && sptSet[u].j == this.state.endNodej)) {
+                    this.dijkstraRegisterShortest(speed);
+                    clearInterval(timer);
+                }
+                v++;
+
+            }, timerSpeed);
+        } else {
+            for (let i = 0; i < sptSet.length; i++) {
+                let u = this.dijkstraMinDistanceNode(sptSet);
+                if (u == -1) {
+                    this.setState({
+                        disableGridFlag: false
+                    })
+                    break;
+                }
+                let arr1 = arr;
+                arr1[sptSet[u].i][sptSet[u].j].dijkstra.included = true;
+
+                this.setState({
+                    arr: arr1
+                })
+
+                //i-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i - 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i - 1 >= 0 && sptSet[u].i - 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i - 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].distance + 1 < sptSet[u - 61].distance) {
+                        sptSet[u - 61].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // i+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i + 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i + 1 >= 0 && sptSet[u].i + 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i + 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].distance + 1 < sptSet[u + 61].distance) {
+                        sptSet[u + 61].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // j-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j - 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j - 1 >= 0 && sptSet[u].j - 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j - 1].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].distance + 1 < sptSet[u - 1].distance) {
+                        sptSet[u - 1].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // j+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j + 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j + 1 >= 0 && sptSet[u].j + 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j + 1].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].distance + 1 < sptSet[u + 1].distance) {
+                        sptSet[u + 1].distance = sptSet[u].distance + 1;
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                if (sptSet[u].i == this.state.endNodei && sptSet[u].j == this.state.endNodej) {
+                    this.dijkstraRegisterShortest(0);
+                    break;
+                }
+            }
         }
     }
 
-    dijikstraMinDistanceNode=(sptSet)=>{
+    dijkstraRegisterShortest = async (speed) => {
+        const { arr, startNodei, startNodej, endNodei, endNodej } = this.state;
+        if (arr[endNodei][endNodej].dijkstra.parenti != -1 && arr[endNodei][endNodej].dijkstra.parentj != -1) {
+            let i = endNodei;
+            let j = endNodej;
+            let timerSpeed = Number;
+            if (speed == 1) {
+                timerSpeed = 200;
+            } else if (speed == 2) {
+                timerSpeed = 500;
+            } else if (speed == 4) {
+                timerSpeed = 1
+            }
+            if (speed != 0) {
+                let timer = await setInterval(async () => {
+                    let x = arr[i][j].dijkstra.parenti;
+                    let y = arr[i][j].dijkstra.parentj;
+                    let arr1 = arr;
+                    arr1[i][j].dijkstra.shortestPath = true;
+                    await this.setState({
+                        arr: arr1
+                    })
+                    i = x;
+                    j = y;
+                    if (i == startNodei && j == startNodej) {
+                        this.setState({
+                            disableGridFlag: false
+                        })
+                        clearInterval(timer);
+                    }
+                }, timerSpeed);
+            } else {
+                while (i != startNodei || j != startNodej) {
+                    let x = arr[i][j].dijkstra.parenti;
+                    let y = arr[i][j].dijkstra.parentj;
+                    let arr1 = arr;
+                    arr1[i][j].dijkstra.shortestPath = true;
+                    await this.setState({
+                        arr: arr1
+                    })
+                    i = x;
+                    j = y;
+                }
+                await this.setState({
+                    disableGridFlag: false
+                })
+            }
+        }
+    }
+
+    dijkstraMinDistanceNode = (sptSet) => {
         let min = Number.MAX_SAFE_INTEGER;
         let minInd = -1;
 
-        for(let i=0;i<sptSet.length;i++){
-            if(this.state.arr[sptSet[i].i][sptSet[i].j].dijikstra.included == false && sptSet[i].distance<=min){
+        for (let i = 0; i < sptSet.length; i++) {
+            if (this.state.arr[sptSet[i].i][sptSet[i].j].dijkstra.included == false
+                && ((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[i].i && ele.j == sptSet[i].j)).length == 0)
+                && sptSet[i].distance < min
+            ) {
+
                 min = sptSet[i].distance;
                 minInd = i;
             }
@@ -192,28 +462,41 @@ class Body extends Component {
     }
 
     render() {
-        const { startNodei, startNodej, endNodei, endNodej } = this.state;
+        const { startNodei, startNodej, endNodei, endNodej, arr } = this.state;
         return (
-            <>
-                <div className="headerClass"><Header calculate={this.calculate} /></div>
-                <div>
+            <div className={this.state.disableGridFlag ? "disableGrid" : "enableGrid"}>
+                <div className="headerClass"><Header algorithmSelect={this.algorithmSelect} calculate={this.calculate} clearGrid={this.clearGrid} /></div>
+                <div className="bodyHeader">
+                    <ul>
+                        <li>Source Node <FaHiking /></li>
+                        <li>Destination Node <FaArchway /></li>
+                        <li style={{ marginTop: 'auto' }}>Unvisited Node <div className="unvisited"></div></li>
+                        <li style={{ marginTop: 'auto' }}>Visited Node <div className="visited"></div></li>
+                        <li style={{ marginTop: 'auto' }}>Shortest Path Node <div className="shortestPath"></div></li>
+                        <li style={{ marginTop: 'auto' }}>Obstacle Node <div className="obstacle"></div></li>
+                    </ul>
+                    {this.state.selectedAlgorithm == "" ?
+                        (<div className="alignClass">Select an algorithm to find the shortest path!</div>) :
+                        (this.state.selectedAlgorithm == "dijkstra" ?
+                            <div className="alignClass">Dijkstra Algorithm is a weighted greedy algorithm which guarantees a shortest path with a time complexity of O(V^2) when represented using adjacency matrix and O(E logV) when represented using adjacency list.</div> :
+                            <div></div>
+                        )
+                    }
                 </div>
                 <div>
                     <table>
                         <tbody>
-                            {this.state.arr.map((ele, i) => (
+                            {arr.map((ele, i) => (
                                 <tr key={i}>
                                     {ele.map((ele, j) => (
                                         <td
                                             key={j}
-                                            style={ele.style}
                                             onDragOver={(event) => this.allowDrop(event, i, j)}
                                             onDrop={(event) => this.drop(event, i, j)}
                                             onDoubleClick={(event) => this.doubleClickHandler(event, i, j)}
                                             onClick={(event) => this.clickHandler(event, i, j)}
                                             onMouseEnter={(event) => this.mouseMoveHandler(event, i, j)}
-                                        // onMouseDown={(event)=>this.mouseDownHandler(event)} 
-                                        // onMouseUp={(event)=>this.mouseUpHandler(event)}
+                                            style={arr[i][j].dijkstra.included ? (arr[i][j].dijkstra.shortestPath ? { backgroundColor: "green" } : { backgroundColor: "yellow" }) : ele.style}
                                         >
                                             {i == startNodei && j == startNodej &&
                                                 <div onDragStart={(event) => this.dragStart(event, i, j, "start")} draggable><FaHiking /></div>}
@@ -226,7 +509,7 @@ class Body extends Component {
                         </tbody>
                     </table>
                 </div>
-            </>
+            </div>
         )
     }
 }

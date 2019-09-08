@@ -5,7 +5,7 @@ import Body from './Body';
 function App() {
   return (
     <>
-      <div className="bodyClass"><Body algorithm/></div>
+      <div><Body algorithm/></div>
     </>
   );
 }

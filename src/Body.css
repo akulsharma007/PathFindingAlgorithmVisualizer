@@ -14,5 +14,76 @@ td {
 .headerClass{
   margin-bottom: 10px;
 }
+
+.disableGrid{
+  pointer-events: none;
+  opacity: 0.95;
+}
   
+.enableGrid{
+  pointer-events: unset;
+  opacity: 1;
+}
   
+.bodyHeader{
+  padding: 0 10px 0 10px;
+}
+
+.bodyHeader ul {
+  display: block;
+  list-style-type: disc;
+  background-color: white;
+}
+
+.bodyHeader li {
+  display: inline-block;
+  list-style: none;
+  padding: 0 28px 0 0;
+}
+
+.bodyHeader .unvisited{
+    height: 24px;
+    width: 22px;
+    display: inline-block;
+    position: relative;
+    top: 0.35em;
+    margin: 0 0.42em;
+    border: 1px solid black;
+}
+
+.bodyHeader .visited{
+  height: 24px;
+  width: 22px;
+  display: inline-block;
+  position: relative;
+  top: 0.35em;
+  margin: 0 0.42em;
+  border: 1px solid black;
+  background-color: yellow;
+}
+
+.bodyHeader .shortestPath{
+  height: 24px;
+  width: 22px;
+  display: inline-block;
+  position: relative;
+  top: 0.35em;
+  margin: 0 0.42em;
+  border: 1px solid black;
+  background-color: green;
+}
+
+.bodyHeader .obstacle{
+  height: 24px;
+  width: 22px;
+  display: inline-block;
+  position: relative;
+  top: 0.35em;
+  margin: 0 0.42em;
+  border: 1px solid black;
+  background-color: black;
+}
+
+.bodyHeader .alignClass{
+  text-align: center;
+}

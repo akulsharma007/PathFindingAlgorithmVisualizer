@@ -39,6 +39,8 @@ class Header extends Component {
                         <div className="dropdown-content">
                             <button onClick={()=>this.algorithmSelect("dijkstra")}>Dijkstra's Algorithm</button>
                             <button onClick={()=>this.algorithmSelect("A*")}>A* Search Algorithm</button>
+                            <button onClick={()=>this.algorithmSelect("dfs")}>Depth-First Search Algorithm</button>
+                            <button onClick={()=>this.algorithmSelect("bfs")}>Breadth-First Search Algorithm</button>
                         </div>
                     </li>
                     

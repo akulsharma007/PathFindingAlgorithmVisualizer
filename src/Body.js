@@ -1387,7 +1387,7 @@ class Body extends Component {
                     <div style={this.state.selectedAlgorithm == "A*" ? { display: "block" } : { display: "none" }} className="alignClass">A* Search Algorithm is a weighted greedy algorithm which is an extension to Dijkshtra's algorithm aiming at optimizing its performance by the use of heuristics.</div>
                     <div style={this.state.selectedAlgorithm == "dfs" ? { display: "block" } : { display: "none" }} className="alignClass">Depth-First Search is an unweighted algorithm which starts at the root node and explores as far as possible along each branch before backtracking, it does not guarantee a shortest path!</div>
                     <div style={this.state.selectedAlgorithm == "bfs" ? { display: "block" } : { display: "none" }} className="alignClass">Breadth-First Search is an unweighted algorithm which uses the opposite strategy as depth-first strategy to guarantee a shortest path!</div>
-                    <div style={this.state.selectedAlgorithm == "bestFsearch" ? { display: "block" } : { display: "none" }} className="alignClass">Best First Search</div>
+                    <div style={this.state.selectedAlgorithm == "bestFsearch" ? { display: "block" } : { display: "none" }} className="alignClass">Best First Search is a greedy weighted search algorithm that is a pure heuristic search which attempts to find a solution by predicting how close the end of a path is to a solution, it does not guarantee a shortest path!</div>
                     <table>
                         <tbody>
                             {arr.map((ele, i) => (

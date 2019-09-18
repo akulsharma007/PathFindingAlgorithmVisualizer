@@ -157,26 +157,31 @@ class Body extends Component {
     }
 
     algorithmSelect = (algorithm) => {
-        if (algorithm == "dijkstra") {
+        // if (algorithm == "dijkstra") {
+        //     this.setState({
+        //         selectedAlgorithm: "dijkstra"
+        //     })
+        // }
+        // if (algorithm == "A*") {
+        //     this.setState({
+        //         selectedAlgorithm: "A*"
+        //     })
+        // }
+        // if (algorithm == "dfs") {
+        //     this.setState({
+        //         selectedAlgorithm: "dfs"
+        //     })
+        // }
+        // if (algorithm == "bfs") {
+        //     this.setState({
+        //         selectedAlgorithm: "bfs"
+        //     })
+        // }
+        //if (algorithm == "bestFsearch"){
             this.setState({
-                selectedAlgorithm: "dijkstra"
+                selectedAlgorithm : algorithm
             })
-        }
-        if (algorithm == "A*") {
-            this.setState({
-                selectedAlgorithm: "A*"
-            })
-        }
-        if (algorithm == "dfs") {
-            this.setState({
-                selectedAlgorithm: "dfs"
-            })
-        }
-        if (algorithm == "bfs") {
-            this.setState({
-                selectedAlgorithm: "bfs"
-            })
-        }
+        //}
     }
 
     calculate = (algorithm, speed) => {
@@ -191,6 +196,9 @@ class Body extends Component {
         }
         if (algorithm == "bfs") {
             this.bfsCalculate(speed);
+        }
+        if(algorithm == "bestFsearch"){
+            this.bestFirstSearchCalculate(speed);
         }
     }
 
@@ -723,6 +731,231 @@ class Body extends Component {
         }
     }
 
+    bestFirstSearchCalculate = async (speed) => {
+
+        const { arr, startNodei, startNodej } = this.state;
+        let sptSet = [];
+        arr.forEach((ele, i) => {
+            ele.forEach((element, j) => {
+                if (i == startNodei && j == startNodej) {
+                    sptSet.push({ i, j, fDistance: this.returnManhattenDistance(i, j) })
+                } else {
+                    sptSet.push({ i, j, fDistance: Number.MAX_SAFE_INTEGER })
+                }
+            })
+        })
+
+        let v = 0;
+
+        let timerSpeed = Number;
+        if (speed == 1) {
+            timerSpeed = 200;
+        } else if (speed == 2) {
+            timerSpeed = 500;
+        } else if (speed == 4) {
+            timerSpeed = 1;
+        }
+        if (speed != 0) {
+            let timer = await setInterval(async () => {
+                this.setState({
+                    disableGridFlag: true
+                })
+                let u = this.aStarMinDistanceNode(sptSet);
+                if (u == -1) {
+                    clearInterval(timer);
+                    this.setState({
+                        disableGridFlag: false
+                    })
+                    return;
+                }
+                let arr1 = arr;
+                arr1[sptSet[u].i][sptSet[u].j].dijkstra.included = true;
+
+                await this.setState({
+                    arr: arr1
+                })
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i - 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i - 1 >= 0 && sptSet[u].i - 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i - 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].fDistance < sptSet[u - 61].fDistance) {
+                        sptSet[u - 61].fDistance = this.returnManhattenDistance(sptSet[u].i - 1, sptSet[u].j);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // i+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i + 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i + 1 >= 0 && sptSet[u].i + 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i + 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].fDistance < sptSet[u + 61].fDistance) {
+                        sptSet[u + 61].fDistance = this.returnManhattenDistance(sptSet[u].i + 1, sptSet[u].j);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // j-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j - 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j - 1 >= 0 && sptSet[u].j - 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j - 1].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].fDistance < sptSet[u - 1].fDistance) {
+                        sptSet[u - 1].fDistance = this.returnManhattenDistance(sptSet[u].i, sptSet[u].j - 1);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                // j+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j + 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j + 1 >= 0 && sptSet[u].j + 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j + 1].dijkstra.included)
+                    )
+                ) {
+
+                    if (sptSet[u].fDistance < sptSet[u + 1].fDistance) {
+                        sptSet[u + 1].fDistance = this.returnManhattenDistance(sptSet[u].i, sptSet[u].j + 1);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parentj = sptSet[u].j;
+                        await this.setState({
+                            arr: arr2
+                        })
+
+                    }
+                }
+
+                if ((sptSet[u].i == this.state.endNodei && sptSet[u].j == this.state.endNodej)) {
+                    this.dijkstraRegisterShortest(speed);
+                    clearInterval(timer);
+                }
+                v++;
+
+            }, timerSpeed);
+        } else {
+            for (let i = 0; i < sptSet.length; i++) {
+                let u = this.aStarMinDistanceNode(sptSet);
+                if (u == -1) {
+                    this.setState({
+                        disableGridFlag: false
+                    })
+                    break;
+                }
+                let arr1 = arr;
+                arr1[sptSet[u].i][sptSet[u].j].dijkstra.included = true;
+
+                this.setState({
+                    arr: arr1
+                })
+
+                //i-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i - 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i - 1 >= 0 && sptSet[u].i - 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i - 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].fDistance < sptSet[u - 61].fDistance) {
+                        sptSet[u - 61].fDistance = this.returnManhattenDistance(sptSet[u].i - 1, sptSet[u].j);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i - 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // i+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i + 1 && ele.j == sptSet[u].j)).length == 0)
+                    && (sptSet[u].i + 1 >= 0 && sptSet[u].i + 1 < 20)
+                    && (sptSet[u].j >= 0 && sptSet[u].j < 61
+                        && !(arr1[sptSet[u].i + 1][sptSet[u].j].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].fDistance < sptSet[u + 61].fDistance) {
+                        sptSet[u + 61].fDistance = this.returnManhattenDistance(sptSet[u].i + 1, sptSet[u].j);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i + 1][sptSet[u].j].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // j-1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j - 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j - 1 >= 0 && sptSet[u].j - 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j - 1].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].fDistance < sptSet[u - 1].fDistance) {
+                        sptSet[u - 1].fDistance = this.returnManhattenDistance(sptSet[u].i, sptSet[u].j - 1);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j - 1].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                // j+1 adjacent
+                if (((this.state.wallRestrictedSpace.filter(ele => ele.i == sptSet[u].i && ele.j == sptSet[u].j + 1)).length == 0)
+                    && (sptSet[u].i >= 0 && sptSet[u].i < 20)
+                    && (sptSet[u].j + 1 >= 0 && sptSet[u].j + 1 < 61
+                        && !(arr1[sptSet[u].i][sptSet[u].j + 1].dijkstra.included)
+                    )
+                ) {
+                    if (sptSet[u].fDistance < sptSet[u + 1].fDistance) {
+                        sptSet[u + 1].fDistance = this.returnManhattenDistance(sptSet[u].i, sptSet[u].j + 1);
+                        let arr2 = arr;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parenti = sptSet[u].i;
+                        arr2[sptSet[u].i][sptSet[u].j + 1].dijkstra.parentj = sptSet[u].j;
+                        this.setState({
+                            arr: arr2
+                        })
+                    }
+                }
+
+                if (sptSet[u].i == this.state.endNodei && sptSet[u].j == this.state.endNodej) {
+                    this.dijkstraRegisterShortest(0);
+                    break;
+                }
+            }
+        }
+    }
+
     aStarMinDistanceNode = (sptSet) => {
         let min = Number.MAX_SAFE_INTEGER;
         let minInd = -1;
@@ -1154,6 +1387,7 @@ class Body extends Component {
                     <div style={this.state.selectedAlgorithm == "A*" ? { display: "block" } : { display: "none" }} className="alignClass">A* Search Algorithm is a weighted greedy algorithm which is an extension to Dijkshtra's algorithm aiming at optimizing its performance by the use of heuristics.</div>
                     <div style={this.state.selectedAlgorithm == "dfs" ? { display: "block" } : { display: "none" }} className="alignClass">Depth-First Search is an unweighted algorithm which starts at the root node and explores as far as possible along each branch before backtracking, it does not guarantee a shortest path!</div>
                     <div style={this.state.selectedAlgorithm == "bfs" ? { display: "block" } : { display: "none" }} className="alignClass">Breadth-First Search is an unweighted algorithm which uses the opposite strategy as depth-first strategy to guarantee a shortest path!</div>
+                    <div style={this.state.selectedAlgorithm == "bestFsearch" ? { display: "block" } : { display: "none" }} className="alignClass">Best First Search</div>
                     <table>
                         <tbody>
                             {arr.map((ele, i) => (

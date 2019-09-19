@@ -156,32 +156,28 @@ class Body extends Component {
         })
     }
 
+    clearPath = async () => {
+        let arr1 = this.state.arr;
+        for (let i = 0; i < 20; i++) {
+            for (let j = 0; j < 61; j++) {
+                arr1[i][j].dijkstra = { parenti: -1, parentj: -1, included: false, shortestPath: false };
+                arr1[i][j].dfs = { included: false, shortestPath: false };
+                if(arr1[i][j].style.backgroundColor=="yellow"||arr1[i][j].style.backgroundColor=="green"){
+                    arr1[i][j].style = { backgroundColor: "white" };
+                }
+            }
+        }
+        await this.setState({
+            arr: arr1,
+            clickedFlag: false,
+            mouseDownUpFlag: false
+        })
+    }
+
     algorithmSelect = (algorithm) => {
-        // if (algorithm == "dijkstra") {
-        //     this.setState({
-        //         selectedAlgorithm: "dijkstra"
-        //     })
-        // }
-        // if (algorithm == "A*") {
-        //     this.setState({
-        //         selectedAlgorithm: "A*"
-        //     })
-        // }
-        // if (algorithm == "dfs") {
-        //     this.setState({
-        //         selectedAlgorithm: "dfs"
-        //     })
-        // }
-        // if (algorithm == "bfs") {
-        //     this.setState({
-        //         selectedAlgorithm: "bfs"
-        //     })
-        // }
-        //if (algorithm == "bestFsearch"){
             this.setState({
                 selectedAlgorithm : algorithm
             })
-        //}
     }
 
     calculate = (algorithm, speed) => {
@@ -1372,7 +1368,7 @@ class Body extends Component {
         const { startNodei, startNodej, endNodei, endNodej, arr } = this.state;
         return (
             <div className={this.state.disableGridFlag ? "disableGrid" : "enableGrid"}>
-                <div className="headerClass"><Header algorithmSelect={this.algorithmSelect} calculate={this.calculate} clearGrid={this.clearGrid} /></div>
+                <div className="headerClass"><Header algorithmSelect={this.algorithmSelect} calculate={this.calculate} clearGrid={this.clearGrid} clearPath={this.clearPath} /></div>
                 <div className="bodyHeader">
                     <ul>
                         <li>Source Node <FaHiking /></li>

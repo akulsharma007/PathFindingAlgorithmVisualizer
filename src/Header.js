@@ -54,6 +54,7 @@ class Header extends Component {
 
                     <li><button onClick={this.calculate}>Calculate</button></li>
                     <li className="rightFloat"><button onClick={()=>this.props.clearGrid()}>Clear Grid</button></li>
+                    <li className="rightFloat"><button onClick={()=>this.props.clearPath()}>Clear Path</button></li>
                     <li className="dropdown rightFloat">
                         <button className="dropbtn">Speed{" "}<FaAngleDown/></button>
                         <div className="dropdown-content">

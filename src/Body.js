@@ -98,7 +98,6 @@ class Body extends Component {
                     wallRestrictedSpace: arrr,
                     arr: arr
                 })
-                console.log(arrr);
             }
         }
     }
@@ -180,6 +179,12 @@ class Body extends Component {
             })
     }
 
+    mazeSelect = (maze,speed) => {
+        if(maze == "rd"){
+            this.recursiveDiv(speed);
+        }
+    }
+
     calculate = (algorithm, speed) => {
         if (algorithm == "dijkstra") {
             this.dijkstraCalculate(speed);
@@ -196,6 +201,101 @@ class Body extends Component {
         if(algorithm == "bestFsearch"){
             this.bestFirstSearchCalculate(speed);
         }
+    }
+
+    recursiveDiv = async (speed) => {
+        let wall = this.state.wallRestrictedSpace;
+        let style = this.state.arr;
+        // if(speed==0){
+            for(let i=0;i<20;i++){
+                style[i][0].style = { backgroundColor: "black" };
+                wall.push({i:i,j:0});
+                this.setState({
+                    arr:style,
+                    wallRestrictedSpace:wall
+                })
+            }
+            for(let i=1;i<61;i++){
+                style[19][i].style = { backgroundColor: "black" };
+                wall.push({i:19,j:i});
+                this.setState({
+                    arr:style,
+                    wallRestrictedSpace:wall
+                })
+            }
+            for(let i=19;i>=0;i--){
+                style[i][60].style = { backgroundColor: "black" };
+                wall.push({i:i,j:60});
+                this.setState({
+                    arr:style,
+                    wallRestrictedSpace:wall
+                })
+            }
+            for(let i=59;i>=1;i--){
+                style[0][i].style = { backgroundColor: "black" };
+                wall.push({i:0,j:i});
+                this.setState({
+                    arr:style,
+                    wallRestrictedSpace:wall
+                })
+            }
+            this.recursionOfRecursiveDivision(1,18,1,59);
+        // }
+    }
+
+    recursionOfRecursiveDivision = async (istart,iend,jstart,jend)=>{
+        if(iend<=istart||iend-istart<2||jend<=jstart||jend-jstart<2){
+            return;
+        }
+        let wall = this.state.wallRestrictedSpace;
+        let style = this.state.arr;
+            if(jend-jstart > iend-istart ){
+                let total = jend-jstart;
+                let bisectLine = Math.floor(Math.random()*total);
+                let skip = iend-istart;
+                let skipPoint = Math.floor(Math.random()*skip);
+                for(let i=istart;i<=iend;i++){
+                    if(i==istart+skipPoint||
+                       (this.state.startNodei==i&&this.state.startNodej==jstart+bisectLine)||
+                       (this.state.endNodei==i&&this.state.endNodej==jstart+bisectLine)||
+                       (style[i][jstart+bisectLine].style.backgroundColor == "black")
+                    ){
+                        continue;
+                    }
+                    style[i][jstart+bisectLine].style = { backgroundColor: "black" };
+                    wall.push({i:i,j:jstart+bisectLine});
+                    this.setState({
+                        arr:style,
+                        wallRestrictedSpace:wall
+                    })
+                }
+                   this.recursionOfRecursiveDivision(istart,iend,jstart,jstart+bisectLine-2);
+                   this.recursionOfRecursiveDivision(istart,iend,jstart+bisectLine+2,jend);
+            }else{
+                let total = iend-istart;
+                let bisectLine = Math.floor(Math.random()*total);
+                let skip = jend-jstart;
+                let skipPoint = Math.floor(Math.random()*skip);
+                for(let i=jstart;i<=jend;i++){
+                    if(i==jstart+skipPoint||
+                      (this.state.startNodei==istart+bisectLine&&this.state.startNodej==i)||
+                      (this.state.endNodei==istart+bisectLine&&this.state.endNodej==i)||
+                      (style[istart+bisectLine][i].style.backgroundColor == "black")
+                    ){
+                        continue;
+                    }
+                    style[istart+bisectLine][i].style = { backgroundColor: "black" };
+                    wall.push({i:istart+bisectLine,j:i});
+                    this.setState({
+                        arr:style,
+                        wallRestrictedSpace:wall
+                    })
+                }
+                this.recursionOfRecursiveDivision(istart,istart+bisectLine-2,jstart,jend);
+                this.recursionOfRecursiveDivision(istart+bisectLine+2,iend,jstart,jend);
+            }
+
+
     }
 
     dijkstraCalculate = async (speed) => {
@@ -1339,7 +1439,6 @@ class Body extends Component {
         }
     }
 
-
     bfsRegisterShortest = async (timerSpeed) => {
         const { arr, startNodei, startNodej, endNodei, endNodej } = this.state;
         let i = endNodei;
@@ -1368,7 +1467,7 @@ class Body extends Component {
         const { startNodei, startNodej, endNodei, endNodej, arr } = this.state;
         return (
             <div className={this.state.disableGridFlag ? "disableGrid" : "enableGrid"}>
-                <div className="headerClass"><Header algorithmSelect={this.algorithmSelect} calculate={this.calculate} clearGrid={this.clearGrid} clearPath={this.clearPath} /></div>
+                <div className="headerClass"><Header algorithmSelect={this.algorithmSelect} mazeSelect={this.mazeSelect} calculate={this.calculate} clearGrid={this.clearGrid} clearPath={this.clearPath} /></div>
                 <div className="bodyHeader">
                     <ul>
                         <li>Source Node <FaHiking /></li>

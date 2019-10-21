@@ -48,7 +48,7 @@ class Header extends Component {
                     <li className="dropdown">
                         <button className="dropbtn">Mazes{" "}<FaAngleDown/></button>
                         <div className="dropdown-content">
-                        <button>soon</button>
+                        <button onClick={()=>this.props.mazeSelect("rd",this.state.selectedSpeed)}>Random</button>
                         </div>
                     </li>
 
